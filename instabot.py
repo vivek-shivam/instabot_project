@@ -107,6 +107,51 @@ def get_user_post(insta_username):
     else:
         print 'Status code other than 200 received!'
 
+def get_post_id(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print 'User does not exist!'
+        exit()
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            return user_media['data'][0]['id']
+        else:
+            print 'There is no recent post of the user!'
+            exit()
+    else:
+        print 'Status code other than 200 received!'
+        exit()
+
+def like_a_post(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/likes') % (media_id)
+    payload = {"access_token": APP_ACCESS_TOKEN}
+    print 'POST request url : %s' % (request_url)
+    post_a_like = requests.post(request_url, payload).json()
+    if post_a_like['meta']['code'] == 200:
+        print 'Like was successful!'
+    else:
+        print 'Your like was unsuccessful. Try again!'
+
+
+def post_a_comment(insta_username):
+    media_id = get_post_id(insta_username)
+    comment_text = raw_input("Your comment: ")
+    payload = {"access_token": APP_ACCESS_TOKEN, "text" : comment_text}
+    request_url = (BASE_URL + 'media/%s/comments') % (media_id)
+    print 'POST request url : %s' % (request_url)
+
+    make_comment = requests.post(request_url, payload).json()
+
+    if make_comment['meta']['code'] == 200:
+        print "Successfully added a new comment!"
+    else:
+        print "Unable to add comment. Try again!"
+
 
 def start_bot():
     while True:
@@ -117,6 +162,8 @@ def start_bot():
         print "b.Get details of a user by username\n"
         print "c.get your recent pic downloaded \n"
         print "d.get recent pic of a username\n"
+        print "e. like recent media of a username \n"
+        print "f. comment on recent media of user"
         print "e.Exit"
 
         choice=raw_input("Enter you choice: ")
@@ -131,6 +178,12 @@ def start_bot():
             insta_username = raw_input("Enter the username of the user: ")
             get_user_post(insta_username)
         elif choice=="e":
+            insta_username=raw_input("enter username of the user :")
+            like_a_post(insta_username)
+        elif choice=="f":
+            insta_username=raw_input("enter the username of the user")
+            post_a_comment(insta_username)
+        elif choice=="g":
             exit()
         else:
             print "wrong choice"
