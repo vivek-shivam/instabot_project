@@ -118,6 +118,7 @@ def get_post_id(insta_username):
 
     if user_media['meta']['code'] == 200:
         if len(user_media['data']):
+
             return user_media['data'][0]['id']
         else:
             print 'There is no recent post of the user!'
@@ -152,6 +153,74 @@ def post_a_comment(insta_username):
     else:
         print "Unable to add comment. Try again!"
 
+#function to get comments info on friends recent post
+def comment_info(insta_username):
+    get_user_id(insta_username)
+
+
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info1 = requests.get(request_url).json()
+    if comment_info1['meta']['code'] == 200:
+        if len(comment_info1):
+            a=0
+            while a<len(comment_info1):
+                print "%s commented : %s"%(comment_info1["data"][a]["from"]["username"],comment_info1["data"][a]["text"])
+                a=a+1
+        else:
+            print "no data"
+    else:
+        print"code not 200"
+
+#get comments of own recent post
+def own_comment_info():
+    media_id = get_own_post_id()
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info1 = requests.get(request_url).json()
+    if comment_info1['meta']['code'] == 200:
+        if len(comment_info1):
+            a = 0
+            for a in range(0,len(comment_info1["data"])):
+                print "%s commented : %s" % (comment_info1["data"][a]["from"]["username"], comment_info1["data"][a]["text"])
+                a = a + 1
+        else:
+            print "no data"
+    else:
+        print"code not 200"
+
+#to delete bad comments on post
+def delete_negative_comment(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info = requests.get(request_url).json()
+
+    if comment_info['meta']['code'] == 200:
+        if len(comment_info['data']):
+            #Here's a naive implementation of how to delete the negative comments :)
+            for x in range(0, len(comment_info['data'])):
+                comment_id = comment_info['data'][x]['id']
+                comment_text = comment_info['data'][x]['text']
+                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+                if (blob.sentiment.p_neg > blob.sentiment.p_pos):
+                    print 'Negative comment : %s' % (comment_text)
+                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % (media_id, comment_id, APP_ACCESS_TOKEN)
+                    print 'DELETE request url : %s' % (delete_url)
+                    delete_info = requests.delete(delete_url).json()
+
+                    if delete_info['meta']['code'] == 200:
+                        print 'Comment successfully deleted!\n'
+                    else:
+                        print 'Unable to delete comment!'
+                else:
+                    print 'Positive comment : %s\n' % (comment_text)
+        else:
+            print 'There are no existing comments on the post!'
+    else:
+        print 'Status code other than 200 received!'
+
 
 def start_bot():
     while True:
@@ -163,8 +232,11 @@ def start_bot():
         print "c.get your recent pic downloaded \n"
         print "d.get recent pic of a username\n"
         print "e. like recent media of a username \n"
-        print "f. comment on recent media of user"
-        print "e.Exit"
+        print "f. comment on recent media of user\n"
+        print "g. view comments on own recent post \n"
+        print "h. view comments on user's recent post \n"
+        print "i. delete bad comments on the picture \n"
+        print "j.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -183,7 +255,14 @@ def start_bot():
         elif choice=="f":
             insta_username=raw_input("enter the username of the user")
             post_a_comment(insta_username)
-        elif choice=="g":
+        elif choice == "g":
+            own_comment_info()
+        elif choice == "h":
+            insta_username = raw_input("Enter the username of the user: ")
+            comment_info(insta_username)
+        elif choice == "i":
+            insta_username = raw_input("Enter the username of the user")
+            delete_negative_comment()
             exit()
         else:
             print "wrong choice"
