@@ -1,4 +1,7 @@
 import requests,urllib
+import matplotlib.pyplot as plt
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 from token_key import APP_ACCESS_TOKEN
 
 BASE_URL = 'https://api.instagram.com/v1/'
@@ -139,6 +142,20 @@ def like_a_post(insta_username):
         print 'Your like was unsuccessful. Try again!'
 
 
+
+def get_own_post_id():
+    request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    own_media = requests.get(request_url).json()
+
+    if own_media['meta']['code'] == 200:
+        if len(own_media['data']):
+            return own_media['data'][0]['id']
+        else:
+            print 'Post does not exist!'
+    else:
+        print 'Status code other than 200 received!'
+
 def post_a_comment(insta_username):
     media_id = get_post_id(insta_username)
     comment_text = raw_input("Your comment: ")
@@ -165,13 +182,15 @@ def comment_info(insta_username):
     if comment_info1['meta']['code'] == 200:
         if len(comment_info1):
             a=0
-            while a<len(comment_info1):
+            while a<len(comment_info1)-1:
                 print "%s commented : %s"%(comment_info1["data"][a]["from"]["username"],comment_info1["data"][a]["text"])
                 a=a+1
         else:
             print "no data"
     else:
         print"code not 200"
+
+
 
 #get comments of own recent post
 def own_comment_info():
@@ -222,6 +241,45 @@ def delete_negative_comment(insta_username):
         print 'Status code other than 200 received!'
 
 
+
+
+
+def compare_comments():
+    media_id = get_own_post_id()
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info = requests.get(request_url).json()
+    negative = 0
+    positive = 0
+
+    if comment_info['meta']['code'] == 200:
+        if len(comment_info['data']):
+            for x in range(0, len(comment_info['data'])):
+                comment_id = comment_info['data'][x]['id']
+                comment_text = comment_info['data'][x]['text']
+                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+                if (blob.sentiment.p_neg > blob.sentiment.p_pos):
+                    print "Negative comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
+                    negative=negative+1
+                else:
+                    print "Positive comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
+                    positive=positive+1
+
+
+            print"positive comments : %s"%(positive)
+            print"negative comments : %s"%(negative)
+            labels = "Positive Comments", "Negative Comments"
+            numbers = [positive, negative]
+            colors = ['gold', 'green']
+            explode = (0.1, 0)  # explode 1st slice
+
+            # Plot
+            plt.pie(numbers, explode=explode, labels=labels, colors=colors,
+                    autopct='%1.1f%%', shadow=True, startangle=140)
+
+            plt.axis('equal')
+            plt.show()
+
 def start_bot():
     while True:
         print "\n"
@@ -236,7 +294,8 @@ def start_bot():
         print "g. view comments on own recent post \n"
         print "h. view comments on user's recent post \n"
         print "i. delete bad comments on the picture \n"
-        print "j.Exit"
+        print "j. compare the comments on own recent post an creat a pie chart of the same "
+        print "k.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -263,7 +322,11 @@ def start_bot():
         elif choice == "i":
             insta_username = raw_input("Enter the username of the user")
             delete_negative_comment()
+        elif choice=="j":
+            compare_comments()
+        elif choice=="k":
             exit()
+
         else:
             print "wrong choice"
 
