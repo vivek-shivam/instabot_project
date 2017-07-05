@@ -74,20 +74,21 @@ def get_user_info(insta_username):
 
 
 def get_own_post():
-    request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
-    print 'GET request url : %s' % (request_url)
+    request_url = (BASE_URL + "users/self/media/recent/?access_token=%s") % (APP_ACCESS_TOKEN)
+    print "GET request url : %s" % (request_url)
     own_media = requests.get(request_url).json()
 
-    if own_media['meta']['code'] == 200:
-        if len(own_media['data']):
-            image_name = own_media['data'][0]['id'] + '.jpeg'
+    if own_media["meta"]["code"] == 200:
+        if len(own_media["data"]):
+            image_name = own_media["data"][0]["id"] + ".jpeg"
+            print "image id : %s"%(own_media["data"][0]["id"])
             image_url = own_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
-            print 'Your image has been downloaded!'
+            print "Your image has been downloaded!"
         else:
-            print 'Post does not exist!'
+            print "Post does not exist!"
     else:
-        print 'Status code other than 200 received!'
+        print "Status code other than 200 received!"
 
 
 def get_user_post(insta_username):
@@ -182,7 +183,7 @@ def comment_info(insta_username):
     if comment_info1['meta']['code'] == 200:
         if len(comment_info1):
             a=0
-            while a<len(comment_info1)-1:
+            for a in range(0, len(comment_info1["data"])):
                 print "%s commented : %s"%(comment_info1["data"][a]["from"]["username"],comment_info1["data"][a]["text"])
                 a=a+1
         else:
@@ -312,6 +313,23 @@ def get_media_of_tag(tag):
 
 
 
+def recent_media_liked():
+    request_url = BASE_URL + "users/self/media/liked?access_token=%s" % (APP_ACCESS_TOKEN)
+    recently_liked_media=requests.get(request_url).json()
+
+    if recently_liked_media["meta"]["code"] == 200:
+        if len(recently_liked_media["data"]):
+            image_name = recently_liked_media["data"][0]["id"] + ".jpeg"
+            image_url = recently_liked_media["data"][0]["images"]["standard_resolution"]["url"]
+            urllib.urlretrieve(image_url, image_name)
+            print "Your image has been downloaded!"
+        else:
+            print "User does not exist!"
+    else:
+        print "Status code other than 200 received!"
+
+
+
 
 
 def start_bot():
@@ -329,8 +347,9 @@ def start_bot():
         print "h. view comments on user's recent post \n"
         print "i. delete bad comments on the picture \n"
         print "j. compare the comments on own recent post an creat a pie chart of the same\n"
-        print "k. Target a particular tag and comment a appropriate comment of ur wish to the meadia of that tag\n"
-        print "l.Exit"
+        print "k. Target a particular tag and comment a appropriate comment of ur wish to the media of that tag\n"
+        print "l. Download the recent media you just liked \n"
+        print "m.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -363,6 +382,8 @@ def start_bot():
             tag_name=raw_input("enter the tag you want to search? \n")
             get_media_of_tag(tag_name)
         elif choice=="l":
+            recent_media_liked()
+        elif choice=="m":
             exit()
 
         else:
