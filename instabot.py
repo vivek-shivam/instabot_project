@@ -252,33 +252,67 @@ def compare_comments():
     negative = 0
     positive = 0
 
-    if comment_info['meta']['code'] == 200:
-        if len(comment_info['data']):
-            for x in range(0, len(comment_info['data'])):
-                comment_id = comment_info['data'][x]['id']
-                comment_text = comment_info['data'][x]['text']
-                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
-                if (blob.sentiment.p_neg > blob.sentiment.p_pos):
-                    print "Negative comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
-                    negative=negative+1
-                else:
-                    print "Positive comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
-                    positive=positive+1
+    if comment_info['meta']['code'] == 200 and len(comment_info['data']):
+    # Plot
+        for x in range(0, len(comment_info['data'])):
+            comment_id = comment_info['data'][x]['id']
+            comment_text = comment_info['data'][x]['text']
+            blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+            if (blob.sentiment.p_neg > blob.sentiment.p_pos):
+                print "Negative comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
+                negative=negative+1
+            else:
+                print "Positive comment : %s by %s\n" % (comment_text,comment_info["data"][x]["from"]["username"])
+                positive=positive+1
 
 
-            print"positive comments : %s"%(positive)
-            print"negative comments : %s"%(negative)
-            labels = "Positive Comments", "Negative Comments"
-            numbers = [positive, negative]
-            colors = ['gold', 'green']
-            explode = (0.1, 0)  # explode 1st slice
+        print"positive comments : %s"%(positive)
+        print"negative comments : %s"%(negative)
+        labels = "Positive Comments", "Negative Comments"
+        numbers = [positive, negative]
+        colors = ['gold', 'green']
+        explode = (0.1, 0)  # explode 1st slice
+        # Plot
+        plt.pie(numbers, explode=explode, labels=labels, colors=colors,autopct='%1.1f%%', shadow=True, startangle=140)
 
-            # Plot
-            plt.pie(numbers, explode=explode, labels=labels, colors=colors,
-                    autopct='%1.1f%%', shadow=True, startangle=140)
+        plt.axis('equal')
+        plt.show()
 
-            plt.axis('equal')
-            plt.show()
+
+
+
+#extra objective 1
+#functions target a particular tag and comment a appropriate comment of ur wish to the meadia of that tag
+def post_a_targetted_comment(media_id):
+
+    comment_text =raw_input("Enter the comment you want to post? \n")
+    payload = {"access_token": APP_ACCESS_TOKEN, "text" : comment_text}
+    request_url = BASE_URL + "media/%s/comments" % (media_id)
+    make_comment = requests.post(request_url, payload).json()
+
+    if make_comment['meta']['code'] == 200:
+        print "Successfully added a new comment!"
+    else:
+        print "Unable to add comment. Try again!"
+
+def get_media_of_tag(tag):
+    request_url=BASE_URL+ 'tags/%s/media/recent?access_token=%s'%(tag,APP_ACCESS_TOKEN)
+    user_media = requests.get(request_url).json()
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            for x in range(0,len(user_media['data'])):
+                post_a_targetted_comment(user_media['data'][x]['id'])
+        else:
+            print "There is no recent post!"
+    else:
+        print "Status code other than 200 received!"
+
+
+#end of objective 1
+
+
+
+
 
 def start_bot():
     while True:
@@ -294,8 +328,9 @@ def start_bot():
         print "g. view comments on own recent post \n"
         print "h. view comments on user's recent post \n"
         print "i. delete bad comments on the picture \n"
-        print "j. compare the comments on own recent post an creat a pie chart of the same "
-        print "k.Exit"
+        print "j. compare the comments on own recent post an creat a pie chart of the same\n"
+        print "k. Target a particular tag and comment a appropriate comment of ur wish to the meadia of that tag\n"
+        print "l.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -325,6 +360,9 @@ def start_bot():
         elif choice=="j":
             compare_comments()
         elif choice=="k":
+            tag_name=raw_input("enter the tag you want to search? \n")
+            get_media_of_tag(tag_name)
+        elif choice=="l":
             exit()
 
         else:
