@@ -329,6 +329,59 @@ def recent_media_liked():
         print "Status code other than 200 received!"
 
 
+def download_recent_posts():
+    a=True
+    while a==True:
+        print "\n"
+        print "a.Download own recent posts"
+        print "b. Download other user's recent post"
+        choice = raw_input("enter the choice:")
+
+        if choice=="a":
+            request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
+            print 'GET request url : %s' % (request_url)
+            own_media = requests.get(request_url).json()
+
+            if own_media['meta']['code'] == 200:
+                if len(own_media['data']):
+                    x=0
+                    for x in range(0,len(own_media["data"])):
+                        image_name = own_media['data'][x]['id'] + '.jpeg'
+                        image_url = own_media['data'][x]['images']['standard_resolution']['url']
+                        urllib.urlretrieve(image_url, image_name)
+                    print 'Your images has been downloaded!'
+                else:
+                    print 'Post does not exist!'
+            else:
+                print 'Status code other than 200 received!'
+
+
+        elif choice=="b":
+            insta_username=raw_input("Enter the username :")
+            user_id = get_user_id(insta_username)
+            if user_id == None:
+                print 'User does not exist!'
+                exit()
+            request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+            print 'GET request url : %s' % (request_url)
+            user_media = requests.get(request_url).json()
+
+            if user_media['meta']['code'] == 200:
+                if len(user_media['data']):
+                    x=0
+                    for x in range(0,len(user_media["data"])):
+                        image_name = user_media['data'][x]['id'] + '.jpeg'
+                        image_url = user_media['data'][x]['images']['standard_resolution']['url']
+                        urllib.urlretrieve(image_url, image_name)
+                    print 'Your images has been downloaded!'
+                else:
+                    print 'Post does not exist!'
+            else:
+                print 'Status code other than 200 received!'
+
+        else:
+            print "Wrong Choice"
+            a=False
 
 
 
@@ -349,7 +402,8 @@ def start_bot():
         print "j. compare the comments on own recent post an creat a pie chart of the same\n"
         print "k. Target a particular tag and comment a appropriate comment of ur wish to the media of that tag\n"
         print "l. Download the recent media you just liked \n"
-        print "m.Exit"
+        print "m. Download the recent media of anyone \n"
+        print "n.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -384,6 +438,8 @@ def start_bot():
         elif choice=="l":
             recent_media_liked()
         elif choice=="m":
+            recent_media_liked()
+        elif choice=="n":
             exit()
 
         else:
