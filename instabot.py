@@ -1,4 +1,4 @@
-import requests,urllib
+import requests,urllib,re
 import matplotlib.pyplot as plt
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
@@ -102,6 +102,7 @@ def get_user_post(insta_username):
 
     if user_media['meta']['code'] == 200:
         if len(user_media['data']):
+            print "POST ID : %s" + (user_media['data'][0]['id'])
             image_name = user_media['data'][0]['id'] + '.jpeg'
             image_url = user_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
@@ -159,17 +160,26 @@ def get_own_post_id():
 
 def post_a_comment(insta_username):
     media_id = get_post_id(insta_username)
+    print "The comment you can post should have :\n 1.not more than 300 characters \n 2.not more than 4 hashtags \n 3.not more than 1 url \n 4.not all capital letters \n "
     comment_text = raw_input("Your comment: ")
-    payload = {"access_token": APP_ACCESS_TOKEN, "text" : comment_text}
-    request_url = (BASE_URL + 'media/%s/comments') % (media_id)
-    print 'POST request url : %s' % (request_url)
+    if len(comment_text) <= 300 and comment_text.isupper()==False and comment_text.count("#")<=4:
+        c = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',comment_text)
 
-    make_comment = requests.post(request_url, payload).json()
+        if len(c) <= 1:
+            payload = {"access_token": APP_ACCESS_TOKEN, "text": comment_text}
+            request_url = (BASE_URL + 'media/%s/comments') % (media_id)
+            print 'POST request url : %s' % (request_url)
+            make_comment = requests.post(request_url, payload).json()
+            if make_comment['meta']['code'] == 200:
+                print "Successfully added a new comment!"
+            else:
+                print "Unable to add comment. Try again!"
 
-    if make_comment['meta']['code'] == 200:
-        print "Successfully added a new comment!"
+        else:
+            print "Comment cannot be posted as it is not appropriate"
+
     else:
-        print "Unable to add comment. Try again!"
+        print "Comment cannot be posted as it is not appropriate"
 
 #function to get comments info on friends recent post
 def comment_info(insta_username):
@@ -287,14 +297,25 @@ def compare_comments():
 def post_a_targetted_comment(media_id):
 
     comment_text =raw_input("Enter the comment you want to post? \n")
-    payload = {"access_token": APP_ACCESS_TOKEN, "text" : comment_text}
-    request_url = BASE_URL + "media/%s/comments" % (media_id)
-    make_comment = requests.post(request_url, payload).json()
 
-    if make_comment['meta']['code'] == 200:
-        print "Successfully added a new comment!"
+    if len(comment_text) <= 300 and comment_text.isupper()==False and comment_text.count("#")<=4:
+        c = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',comment_text)
+
+        if len(c) <= 1:
+            payload = {"access_token": APP_ACCESS_TOKEN, "text": comment_text}
+            request_url = (BASE_URL + 'media/%s/comments') % (media_id)
+            print 'POST request url : %s' % (request_url)
+            make_comment = requests.post(request_url, payload).json()
+            if make_comment['meta']['code'] == 200:
+                print "Successfully added a new comment!"
+            else:
+                print "Unable to add comment. Try again!"
+
+        else:
+            print "Comment cannot be posted as it is not appropriate"
+
     else:
-        print "Unable to add comment. Try again!"
+        print "Comment cannot be posted as it is not appropriate"
 
 def get_media_of_tag(tag):
     request_url=BASE_URL+ 'tags/%s/media/recent?access_token=%s'%(tag,APP_ACCESS_TOKEN)
@@ -349,7 +370,7 @@ def download_recent_posts():
                         image_name = own_media['data'][x]['id'] + '.jpeg'
                         image_url = own_media['data'][x]['images']['standard_resolution']['url']
                         urllib.urlretrieve(image_url, image_name)
-                    print 'Your images has been downloaded!'
+                    print 'Your images have been downloaded!'
                 else:
                     print 'Post does not exist!'
             else:
@@ -373,7 +394,7 @@ def download_recent_posts():
                         image_name = user_media['data'][x]['id'] + '.jpeg'
                         image_url = user_media['data'][x]['images']['standard_resolution']['url']
                         urllib.urlretrieve(image_url, image_name)
-                    print 'Your images has been downloaded!'
+                    print 'Your images have been downloaded!'
                 else:
                     print 'Post does not exist!'
             else:
@@ -438,7 +459,7 @@ def start_bot():
         elif choice=="l":
             recent_media_liked()
         elif choice=="m":
-            recent_media_liked()
+            download_recent_posts()
         elif choice=="n":
             exit()
 
