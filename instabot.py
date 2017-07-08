@@ -1,7 +1,8 @@
-import requests,urllib,re
+import requests,urllib,re,pylab
 import matplotlib.pyplot as plt
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
+from wordcloud import WordCloud,STOPWORDS
 from token_key import APP_ACCESS_TOKEN
 
 BASE_URL = 'https://api.instagram.com/v1/'
@@ -406,6 +407,49 @@ def download_recent_posts():
 
 
 
+def find_subtrends(tag):
+    request_url=BASE_URL+ "tags/%s/media/recent?access_token=%s"%(tag,APP_ACCESS_TOKEN)
+
+    hash_items = {}
+    user_media = requests.get(request_url).json()
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            for x in range(0, len(user_media['data'])):
+                for y in range(0, len(user_media['data'][x]['tags'])):
+
+                    if user_media['data'][x]['tags'][y] in hash_items:
+                        hash_items[user_media['data'][x]['tags'][y]] += 1
+                    else:
+                        hash_items[user_media['data'][x]['tags'][y]] = 1
+
+
+        else:
+            print "There is no recent post!"
+    else:
+        print "Status code other than 200 received!"
+    hash_items.pop(tag)
+    print hash_items
+    pylab.figure()
+
+    x = range(len(hash_items))
+    pylab.xticks(x, hash_items.keys())
+    pylab.plot(x, hash_items.values(), "g")
+    pylab.show()
+
+
+    wordcloud = WordCloud(font_path=r"C:\Windows\Fonts\FREESCPT.TTF",
+                      stopwords=STOPWORDS,
+                      background_color="white",
+                      width=1200,
+                      height=1000,
+                      ).generate_from_frequencies(hash_items)
+
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+
+
 def start_bot():
     while True:
         print "\n"
@@ -424,7 +468,8 @@ def start_bot():
         print "k. Target a particular tag and comment a appropriate comment of ur wish to the media of that tag\n"
         print "l. Download the recent media you just liked \n"
         print "m. Download the recent media of anyone \n"
-        print "n.Exit"
+        print "n. to find and plot subtrends of a trend \n"
+        print "o.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -461,6 +506,9 @@ def start_bot():
         elif choice=="m":
             download_recent_posts()
         elif choice=="n":
+            trend = raw_input("Enter trend to be searched : ")
+            find_subtrends(trend)
+        elif choice=="o":
             exit()
 
         else:
