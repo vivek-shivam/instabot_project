@@ -491,6 +491,7 @@ def download_post_by_likes():
 
 #objective 2
 #function to find subtrends of a post
+#try tag: igers,beard
 def find_subtrends(tag):
     request_url=BASE_URL+ "tags/%s/media/recent?access_token=%s"%(tag,APP_ACCESS_TOKEN)
 
@@ -598,7 +599,7 @@ def start_bot():
             if set('[~!@#$%^&*()+{}":;\']+$ " "').intersection(insta_username):
                 print "Username not valid in instagram!!!"
             else:
-                delete_negative_comment()
+                delete_negative_comment(insta_username)
         elif choice=="j":
             compare_comments()
         elif choice=="k":
