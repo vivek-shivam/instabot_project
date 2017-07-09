@@ -73,7 +73,7 @@ def get_user_info(insta_username):
         print "Status code other than 200 received!"
 
 
-
+#function to get own recent post
 def get_own_post():
     request_url = (BASE_URL + "users/self/media/recent/?access_token=%s") % (APP_ACCESS_TOKEN)
     print "GET request url : %s" % (request_url)
@@ -91,7 +91,7 @@ def get_own_post():
     else:
         print "Status code other than 200 received!"
 
-
+#function to get user's recent post
 def get_user_post(insta_username):
     user_id = get_user_id(insta_username)
     if user_id == None:
@@ -113,6 +113,8 @@ def get_user_post(insta_username):
     else:
         print 'Status code other than 200 received!'
 
+
+#function to get post id of recent post of user
 def get_post_id(insta_username):
     user_id = get_user_id(insta_username)
     if user_id == None:
@@ -133,6 +135,8 @@ def get_post_id(insta_username):
         print 'Status code other than 200 received!'
         exit()
 
+
+#function to post a like on recent post of a user
 def like_a_post(insta_username):
     media_id = get_post_id(insta_username)
     request_url = (BASE_URL + 'media/%s/likes') % (media_id)
@@ -145,7 +149,7 @@ def like_a_post(insta_username):
         print 'Your like was unsuccessful. Try again!'
 
 
-
+#function to get post id of own recent post
 def get_own_post_id():
     request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
@@ -159,6 +163,7 @@ def get_own_post_id():
     else:
         print 'Status code other than 200 received!'
 
+#function to post a comment on recent post of a user
 def post_a_comment(insta_username):
     media_id = get_post_id(insta_username)
     print "The comment you can post should have :\n 1.not more than 300 characters \n 2.not more than 4 hashtags \n 3.not more than 1 url \n 4.not all capital letters \n "
@@ -255,7 +260,8 @@ def delete_negative_comment(insta_username):
 
 
 
-
+#main objective given
+#function to compare the comments on own recent post nd plot a pie chart of same
 def compare_comments():
     media_id = get_own_post_id()
     request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
@@ -334,7 +340,7 @@ def get_media_of_tag(tag):
 #end of objective 1
 
 
-
+#function to show recently liked media
 def recent_media_liked():
     request_url = BASE_URL + "users/self/media/liked?access_token=%s" % (APP_ACCESS_TOKEN)
     recently_liked_media=requests.get(request_url).json()
@@ -350,7 +356,7 @@ def recent_media_liked():
     else:
         print "Status code other than 200 received!"
 
-
+#function to download the posts of user or self
 def download_recent_posts():
     a=True
     while a==True:
@@ -376,6 +382,7 @@ def download_recent_posts():
                     print 'Post does not exist!'
             else:
                 print 'Status code other than 200 received!'
+            a=False
 
 
         elif choice=="b":
@@ -403,15 +410,87 @@ def download_recent_posts():
                         print 'Post does not exist!'
                 else:
                     print 'Status code other than 200 received!'
-
+            a=False
         else:
             print "Wrong Choice"
             a = False
 
 
+#function download posts with atleast some specific minimum number of likes
+def download_post_by_likes():
+    a = True
+    while a == True:
+        print "\n"
+        print "a.Download own recent posts"
+        print "b. Download other user's recent post"
+        choice = raw_input("enter the choice:")
+
+        if choice == "a":
+            request_url = BASE_URL + "users/self/media/recent/?access_token=%s" % (APP_ACCESS_TOKEN)
+            own_media = requests.get(request_url).json()
+            x = 0
+            if own_media['meta']['code'] == 200:
+                if len(own_media['data']):
+                    like_count = int(raw_input("Enter the minimum likes for a post(in numeric)"))
+                    for x in range(0, len(own_media["data"])):
+                        if own_media["data"][x]["likes"]["count"] > like_count:
+                            image_name = own_media['data'][x]['id'] + '.jpeg'
+                            image_url = own_media['data'][x]['images']['standard_resolution']['url']
+                            urllib.urlretrieve(image_url, image_name)
+                            print 'Your image has been downloaded!'
+                            x = x + 1
+                        else:
+                            x = x + 1
+                            print str(x) + "th picture cannot be downloaded as likes are less"
+
+                else:
+                    print 'Post does not exist!'
+            else:
+                print 'Status code other than 200 received!'
+            a=False
 
 
 
+        elif choice == "b":
+            insta_username = raw_input("Enter the username :")
+            if set('[~!@#$%^&*()+{}":;\']+$ " "').intersection(insta_username):
+                print "Username not valid in Instagram !!"
+            else:
+                user_id = get_user_id(insta_username)
+                if user_id == None:
+                    print 'User does not exist!'
+                    exit()
+                request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+                print 'GET request url : %s' % (request_url)
+                user_media = requests.get(request_url).json()
+
+                if user_media['meta']['code'] == 200:
+                    if len(user_media['data']):
+                        x = 0
+                        like_count = int(raw_input("Enter the minimum likes for a post(in numeric)"))
+                        for x in range(0, len(user_media["data"])):
+                            if own_media["data"][x]["likes"]["count"] > like_count:
+
+                                image_name = user_media['data'][x]['id'] + '.jpeg'
+                                image_url = user_media['data'][x]['images']['standard_resolution']['url']
+                                urllib.urlretrieve(image_url, image_name)
+                                print 'Your image has been downloaded!'
+                                x = x + 1
+                            else:
+                                x = x + 1
+                                print str(x) + "th picture cannot be downloaded as likes are less"
+                    else:
+                        print 'Post does not exist!'
+                else:
+                    print 'Status code other than 200 received!'
+            a=False
+
+        else:
+            print "Wrong Choice"
+            a = False
+
+#objective 2
+#function to find subtrends of a post
 def find_subtrends(tag):
     request_url=BASE_URL+ "tags/%s/media/recent?access_token=%s"%(tag,APP_ACCESS_TOKEN)
 
@@ -452,7 +531,7 @@ def find_subtrends(tag):
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.show()
-
+#end of objective 2
 
 
 def start_bot():
@@ -474,7 +553,8 @@ def start_bot():
         print "l. Download the recent media you just liked \n"
         print "m. Download the recent media of anyone \n"
         print "n. to find and plot subtrends of a trend \n"
-        print "o.Exit"
+        print "o. Download only those posts with atlest some specific minimum likes \n"
+        print "p.Exit"
 
         choice=raw_input("Enter you choice: ")
         if choice=="a":
@@ -535,6 +615,8 @@ def start_bot():
             trend = raw_input("Enter trend to be searched : ")
             find_subtrends(trend)
         elif choice=="o":
+            download_post_by_likes()
+        elif choice=="p":
             exit()
 
         else:
