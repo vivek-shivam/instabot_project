@@ -469,7 +469,7 @@ def download_post_by_likes():
                         x = 0
                         like_count = int(raw_input("Enter the minimum likes for a post(in numeric)"))
                         for x in range(0, len(user_media["data"])):
-                            if own_media["data"][x]["likes"]["count"] > like_count:
+                            if user_media["data"][x]["likes"]["count"] > like_count:
 
                                 image_name = user_media['data'][x]['id'] + '.jpeg'
                                 image_url = user_media['data'][x]['images']['standard_resolution']['url']
